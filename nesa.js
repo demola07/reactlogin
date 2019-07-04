@@ -6,6 +6,7 @@ const PORT = 8080;
 app.use(express.json());
 app.use(cors());
 const user = require("./models/users");
+const Joi = require("Joi");
 
 mongo.connect("mongodb://127.0.0.1:27017/nesa", err => {
   if (err) {
@@ -23,7 +24,6 @@ app.post("/signup", (req, res) => {
       console.log(err);
       return res.send("I got an error");
     } else {
-      // return res.json(doc);
       if (doc) {
         return res.json({
           status: true,
@@ -41,21 +41,37 @@ app.post("/signup", (req, res) => {
 
 app.post("/signin", (req, res) => {
   const userDetails = req.body;
-  user.findOne(userDetails, (err, doc) => {
+  const schema = Joi.object().keys({
+    email: Joi.string()
+      .trim()
+      .email()
+      .required(),
+    password: Joi.string()
+      .min(5)
+      .max(10)
+      .required()
+  });
+  Joi.validate(userDetails, schema, (err, result) => {
     if (err) {
-      return res.send("I got an error");
+      res.send("I got an error");
     } else {
-      if (doc) {
-        return res.json({
-          status: true,
-          userDetails: doc
-        });
-      } else {
-        return res.json({
-          status: false,
-          message: "No User Matching Details"
-        });
-      }
+      user.findOne(result, (err, doc) => {
+        if (err) {
+          return res.send("I got a database Error");
+        } else {
+          if (doc) {
+            return res.json({
+              status: true,
+              result: doc
+            });
+          } else {
+            return res.json({
+              status: false,
+              message: "No User Matching Details"
+            });
+          }
+        }
+      });
     }
   });
 });
