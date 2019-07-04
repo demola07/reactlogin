@@ -18,25 +18,68 @@ mongo.connect("mongodb://127.0.0.1:27017/nesa", err => {
 
 app.post("/signup", (req, res) => {
   const userDetails = req.body;
-  const newUser = new user(userDetails);
-  newUser.save((err, doc) => {
+  const schema = Joi.object().keys({
+    fullname: Joi.string().required(),
+    username: Joi.string()
+      .trim()
+      .alphanum()
+      .min(4)
+      .max(10)
+      .required(),
+    email: Joi.string()
+      .trim()
+      .email()
+      .required(),
+    password: Joi.string()
+      .min(5)
+      .max(10)
+      .required()
+  });
+  Joi.validate(userDetails, schema, (err, result) => {
     if (err) {
-      console.log(err);
-      return res.send("I got an error");
+      res.send("Validation Error");
     } else {
-      if (doc) {
-        return res.json({
-          status: true,
-          userDetails: doc
-        });
-      } else {
-        return res.json({
-          status: false,
-          message: "Pls try again"
-        });
-      }
+      const newUser = new user(result);
+      newUser.save((err, doc) => {
+        if (err) {
+          console.log(err);
+          return res.send("Database Error");
+        } else {
+          if (doc) {
+            return res.json({
+              status: true,
+              result: doc
+            });
+          } else {
+            return res.json({
+              status: false,
+              message: "Pls try again"
+            });
+          }
+        }
+      });
     }
   });
+
+  // const newUser = new user(userDetails);
+  // newUser.save((err, doc) => {
+  //   if (err) {
+  //     console.log(err);
+  //     return res.send("I got an error");
+  //   } else {
+  //     if (doc) {
+  //       return res.json({
+  //         status: true,
+  //         userDetails: doc
+  //       });
+  //     } else {
+  //       return res.json({
+  //         status: false,
+  //         message: "Pls try again"
+  //       });
+  //     }
+  //   }
+  // });
 });
 
 app.post("/signin", (req, res) => {
