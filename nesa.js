@@ -40,23 +40,33 @@ app.post("/signup", (req, res) => {
   });
 
   const { error, value } = Joi.validate(userDetails, schema);
-
   if (error) return res.json(error);
-
-  const password = value.password;
-  var salt = bcrypt.genSaltSync(saltRounds);
-  var hash = bcrypt.hashSync(password, salt);
-  value.password = hash;
-
-  const newUser = new user(value);
-  newUser.save((err, doc) => {
+  user.findOne({ email: value.email }, (err, existingUser) => {
     if (err) {
-      console.log(err);
-      return res.send("Database Error");
+      return res.json(err);
+    }
+    if (!existingUser) {
+      const password = value.password;
+      var salt = bcrypt.genSaltSync(saltRounds);
+      var hash = bcrypt.hashSync(password, salt);
+      value.password = hash;
+
+      const newUser = new user(value);
+      newUser.save((err, doc) => {
+        if (err) {
+          console.log(err);
+          return res.send("Database Error");
+        } else {
+          return res.json({
+            status: true,
+            value: doc
+          });
+        }
+      });
     } else {
       return res.json({
         status: true,
-        value: doc
+        message: `User already exists`
       });
     }
   });
