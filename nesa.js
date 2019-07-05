@@ -18,6 +18,7 @@ mongo.connect("mongodb://127.0.0.1:27017/nesa", err => {
 
 app.post("/signup", (req, res) => {
   const userDetails = req.body;
+
   const schema = Joi.object().keys({
     fullname: Joi.string().required(),
     username: Joi.string()
@@ -35,51 +36,25 @@ app.post("/signup", (req, res) => {
       .max(10)
       .required()
   });
-  Joi.validate(userDetails, schema, (err, result) => {
+
+  const { error, value } = Joi.validate(userDetails, schema);
+
+  if (error) {
+    return res.json(error);
+  }
+
+  const newUser = new user(value);
+  newUser.save((err, doc) => {
     if (err) {
-      res.send("Validation Error");
+      console.log(err);
+      return res.send("Database Error");
     } else {
-      const newUser = new user(result);
-      newUser.save((err, doc) => {
-        if (err) {
-          console.log(err);
-          return res.send("Database Error");
-        } else {
-          if (doc) {
-            return res.json({
-              status: true,
-              result: doc
-            });
-          } else {
-            return res.json({
-              status: false,
-              message: "Pls try again"
-            });
-          }
-        }
+      return res.json({
+        status: true,
+        value: doc
       });
     }
   });
-
-  // const newUser = new user(userDetails);
-  // newUser.save((err, doc) => {
-  //   if (err) {
-  //     console.log(err);
-  //     return res.send("I got an error");
-  //   } else {
-  //     if (doc) {
-  //       return res.json({
-  //         status: true,
-  //         userDetails: doc
-  //       });
-  //     } else {
-  //       return res.json({
-  //         status: false,
-  //         message: "Pls try again"
-  //       });
-  //     }
-  //   }
-  // });
 });
 
 app.post("/signin", (req, res) => {
@@ -94,27 +69,26 @@ app.post("/signin", (req, res) => {
       .max(10)
       .required()
   });
-  Joi.validate(userDetails, schema, (err, result) => {
+
+  const { err, value } = Joi.validate(userDetails, schema);
+  if (err) {
+    return res.json(err);
+  }
+  user.findOne(value, (err, doc) => {
     if (err) {
-      res.send("I got an error");
+      return res.send("I got a database Error");
     } else {
-      user.findOne(result, (err, doc) => {
-        if (err) {
-          return res.send("I got a database Error");
-        } else {
-          if (doc) {
-            return res.json({
-              status: true,
-              result: doc
-            });
-          } else {
-            return res.json({
-              status: false,
-              message: "No User Matching Details"
-            });
-          }
-        }
-      });
+      if (doc) {
+        return res.json({
+          status: true,
+          value: doc
+        });
+      } else {
+        return res.json({
+          status: false,
+          message: "No User Matching Details"
+        });
+      }
     }
   });
 });
