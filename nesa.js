@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const mongo = require("mongoose");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 const PORT = 8080;
 app.use(express.json());
 app.use(cors());
@@ -39,9 +41,12 @@ app.post("/signup", (req, res) => {
 
   const { error, value } = Joi.validate(userDetails, schema);
 
-  if (error) {
-    return res.json(error);
-  }
+  if (error) return res.json(error);
+
+  const password = value.password;
+  var salt = bcrypt.genSaltSync(saltRounds);
+  var hash = bcrypt.hashSync(password, salt);
+  value.password = hash;
 
   const newUser = new user(value);
   newUser.save((err, doc) => {
@@ -69,20 +74,27 @@ app.post("/signin", (req, res) => {
       .max(10)
       .required()
   });
+  const result = Joi.validate(userDetails, schema);
+  const err = result.error;
+  const value = result.value;
+  if (err) return res.json(err);
 
-  const { err, value } = Joi.validate(userDetails, schema);
-  if (err) {
-    return res.json(err);
-  }
-  user.findOne(value, (err, doc) => {
-    if (err) {
-      return res.send("I got a database Error");
-    } else {
+  const password = value.password;
+  user.findOne({ email: value.email }, (err, doc) => {
+    if (err) return res.send("I got a database Error");
+    else {
       if (doc) {
-        return res.json({
-          status: true,
-          value: doc
-        });
+        if (bcrypt.compareSync(password, doc.password)) {
+          return res.json({
+            status: true,
+            value: doc
+          });
+        } else {
+          return res.json({
+            status: false,
+            message: `Wrong password`
+          });
+        }
       } else {
         return res.json({
           status: false,
