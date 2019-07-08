@@ -8,6 +8,7 @@ const PORT = 8080;
 app.use(express.json());
 app.use(cors());
 const user = require("./models/users");
+const blog = require("./models/blog");
 const Joi = require("Joi");
 
 mongo.connect("mongodb://127.0.0.1:27017/nesa", err => {
@@ -112,6 +113,28 @@ app.post("/signin", (req, res) => {
         });
       }
     }
+  });
+});
+
+app.post("/publishpost", (req, res) => {
+  const post = req.body;
+  const newPost = new blog(post);
+  newPost.save((err, doc) => {
+    if (err) {
+      console.log(err);
+      return res.send(`Error`);
+    } else {
+      res.json({
+        status: true,
+        post: doc
+      });
+    }
+  });
+});
+
+app.post("/getposts", (req, res) => {
+  blog.find({}, (err, doc) => {
+    return res.json(doc);
   });
 });
 
