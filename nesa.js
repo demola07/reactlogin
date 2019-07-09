@@ -41,7 +41,12 @@ app.post("/signup", (req, res) => {
   });
 
   const { error, value } = Joi.validate(userDetails, schema);
-  if (error) return res.json(error);
+  if (error) {
+    return res.json({
+      status: false,
+      message: error.details[0].message
+    });
+  }
   user.findOne({ email: value.email }, (err, existingUser) => {
     if (err) {
       return res.json(err);
@@ -66,7 +71,7 @@ app.post("/signup", (req, res) => {
       });
     } else {
       return res.json({
-        status: true,
+        status: false,
         message: `User already exists`
       });
     }
@@ -88,12 +93,18 @@ app.post("/signin", (req, res) => {
   const result = Joi.validate(userDetails, schema);
   const err = result.error;
   const value = result.value;
-  if (err) return res.json(err);
+  if (err) {
+    return res.json({
+      status: false,
+      message: err.details[0].message
+    });
+  }
 
   const password = value.password;
   user.findOne({ email: value.email }, (err, doc) => {
-    if (err) return res.send("I got a database Error");
-    else {
+    if (err) {
+      return res.send("I got a database Error");
+    } else {
       if (doc) {
         if (bcrypt.compareSync(password, doc.password)) {
           return res.json({
@@ -119,17 +130,35 @@ app.post("/signin", (req, res) => {
 app.post("/publishpost", (req, res) => {
   const post = req.body;
   const newPost = new blog(post);
-  newPost.save((err, doc) => {
-    if (err) {
-      console.log(err);
-      return res.send(`Error`);
-    } else {
-      res.json({
-        status: true,
-        post: doc
-      });
-    }
-  });
+  if (!post.title) {
+    res.json({
+      status: false,
+      message: `Please enter Title`
+    });
+  } else if (!post.author) {
+    res.json({
+      status: false,
+      message: `Please enter Author`
+    });
+  } else if (!post.body) {
+    res.json({
+      status: false,
+      message: `Please enter Post`
+    });
+  } else {
+    newPost.save((err, doc) => {
+      if (err) {
+        console.log(err);
+        return res.send(`Error`);
+      } else {
+        res.json({
+          status: true,
+          post: doc,
+          message: `Post successfully saved`
+        });
+      }
+    });
+  }
 });
 
 app.post("/getposts", (req, res) => {
