@@ -129,36 +129,31 @@ app.post("/signin", (req, res) => {
 
 app.post("/publishpost", (req, res) => {
   const post = req.body;
-  const newPost = new blog(post);
-  if (!post.title) {
-    res.json({
+  const schema = Joi.object().keys({
+    title: Joi.string().required(),
+    author: Joi.string().required(),
+    body: Joi.string().required()
+  });
+  const { error, value } = Joi.validate(post, schema);
+  if (error) {
+    return res.json({
       status: false,
-      message: `Please enter Title`
-    });
-  } else if (!post.author) {
-    res.json({
-      status: false,
-      message: `Please enter Author`
-    });
-  } else if (!post.body) {
-    res.json({
-      status: false,
-      message: `Please enter Post`
-    });
-  } else {
-    newPost.save((err, doc) => {
-      if (err) {
-        console.log(err);
-        return res.send(`Error`);
-      } else {
-        res.json({
-          status: true,
-          post: doc,
-          message: `Post successfully saved`
-        });
-      }
+      message: error.details[0].message
     });
   }
+  const newPost = new blog(value);
+  newPost.save((err, doc) => {
+    if (err) {
+      console.log(err);
+      return res.send(`Error`);
+    } else {
+      res.json({
+        status: true,
+        post: doc,
+        message: `Post successfully saved`
+      });
+    }
+  });
 });
 
 app.post("/getposts", (req, res) => {
