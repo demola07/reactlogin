@@ -132,7 +132,8 @@ app.post("/publishpost", (req, res) => {
   const schema = Joi.object().keys({
     title: Joi.string().required(),
     author: Joi.string().required(),
-    body: Joi.string().required()
+    body: Joi.string().required(),
+    date: Joi.string()
   });
   const { error, value } = Joi.validate(post, schema);
   if (error) {
