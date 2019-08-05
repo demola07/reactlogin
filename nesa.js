@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const mongo = require("mongoose");
+// const mysql = require("mysql");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
@@ -10,6 +11,7 @@ app.use(cors());
 const user = require("./models/users");
 const blog = require("./models/blog");
 const Joi = require("Joi");
+const jwt = require("jsonwebtoken");
 
 mongo.connect("mongodb://127.0.0.1:27017/nesa", err => {
   if (err) {
@@ -107,9 +109,10 @@ app.post("/signin", (req, res) => {
     } else {
       if (doc) {
         if (bcrypt.compareSync(password, doc.password)) {
+          const token = jwt.sign(doc.toJSON(), "parish", { expiresIn: "100h" });
           return res.json({
             status: true,
-            value: doc
+            value: token
           });
         } else {
           return res.json({
