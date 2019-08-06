@@ -5,7 +5,7 @@
   "main": "nesa.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nesa.js"
+    "start": " node nesa.js"
   },
   "keywords": [],
   "author": "",
