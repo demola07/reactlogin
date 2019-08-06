@@ -5,21 +5,22 @@ const mongo = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(cors());
 const user = require("./models/users");
 const blog = require("./models/blog");
 const Joi = require("Joi");
 const jwt = require("jsonwebtoken");
+require("./config/db");
 
-mongo.connect("mongodb://127.0.0.1:27017/nesa", err => {
-  if (err) {
-    console.log("BROKEN");
-  } else {
-    console.log("CONNECTED");
-  }
-});
+// mongo.connect("mongodb://127.0.0.1:27017/nesa", err => {
+//   if (err) {
+//     console.log("BROKEN");
+//   } else {
+//     console.log("CONNECTED");
+//   }
+// });
 
 app.post("/signup", (req, res) => {
   const userDetails = req.body;
@@ -170,6 +171,6 @@ app.listen(PORT, err => {
   if (err) {
     console.log(err);
   } else {
-    console.log("And We are live!!!!!!");
+    console.log(`Server running at localhost: ${PORT}`);
   }
 });
