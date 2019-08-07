@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(cors());
 const user = require("./models/users");
 // const blog = require("./models/blog");
-const Joi = require("Joi");
+const Joi = require("@hapi/joi");
 const jwt = require("jsonwebtoken");
 require("./config/db");
 
