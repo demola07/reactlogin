@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(cors());
 const user = require("./models/users");
-const blog = require("./models/blog");
+// const blog = require("./models/blog");
 const Joi = require("Joi");
 const jwt = require("jsonwebtoken");
 require("./config/db");
